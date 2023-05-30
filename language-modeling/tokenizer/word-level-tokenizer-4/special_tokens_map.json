@@ -1,0 +1,10 @@
+{
+  "additional_special_tokens": [
+    "y",
+    "n",
+    ":"
+  ],
+  "bos_token": "<s>",
+  "eos_token": "</s>",
+  "pad_token": "<pad>"
+}
