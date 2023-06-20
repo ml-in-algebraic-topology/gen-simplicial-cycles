@@ -12,8 +12,10 @@ where $R_i = \langle x_i \rangle \subset F$ is a subgroup of free group $F$ gene
 - `greedy`. We iteratively append generators to a word to minimize the approximate distance to the intersection of $R_i$ s.
 - `language-modeling`. We train transformers to learn the intersection of distributions of $R_i$ s. We developed several training procedures based on different usages of `multi-label`. `multi-label` is a binary array of length $n + 1$ where $i$ th position denotes whether the given word is contained in $R_i$ or not.
   - `Ignore`, we model the language of the union of various incomplete intersections.
-  - `Mask`, we additionally mask parts of the model during training accordingly to `multi-label`
+  - `Mask`, we additionally mask parts of the model during training accordingly to `multi-label`. Figure below illustrates the data flow while `Mask` training procedure.
   - `Prompt`, we model the language of words prepended with their `multi-label`s as prompts.
+
+<img src="assets/masking-diagram.png" width="100%" height="auto"/>
  
 ## Usage
 ```py
