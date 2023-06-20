@@ -91,7 +91,7 @@ outputs = batch_from_string(outputs, method = 'integer')
 ```bibtex
 @article{brilliantov2023applying,
     title={Applying language models to algebraic topology: generating simplicial cycles using multi-labeling in Wu's formula},
-    author={Brilliantov, Kirill and Pavutnitskiy, Fedor and Pasechnyuk, Dmitrii and Magai, German},
+    author={Brilliantov, Kirill and Pavutnitskiy, Fedor and Pasechnyuk, Dmitry and Magai, German},
     journal={arXiv preprint},
     year={2023}
 }
