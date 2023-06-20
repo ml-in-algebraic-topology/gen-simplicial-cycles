@@ -87,7 +87,7 @@ outputs = batch_from_string(outputs, method = 'integer')
 - install [`freegroup`](https://github.com/ml-in-algebraic-topology/freegroup) module
 - run `python -m pip install -r requirements.txt`
 
-## Reference
+## Citation
 ```bibtex
 @article{brilliantov2023applying,
     title={Applying language models to algebraic topology: generating simplicial cycles using multi-labeling in Wu's formula},
