@@ -29,54 +29,6 @@ from freegroup.tools import (
 from freegroup.sampling import freegroup_generator
 from itertools import islice
 
-from typing import Dict
-from transformers import LogitsProcessor, TopPLogitsWarper, LogitsProcessorList
-from torch import tensor, inf
-
-class NoLastTokenReductionProcessor(LogitsProcessor):
-    def __init__(self, reciprocal_tokens: Dict[int, int]):
-        self.reciprocal_tokens = reciprocal_tokens
-
-    @staticmethod
-    def from_tokenizer(freegroup_dimension, tokenizer):
-        from itertools import chain
-        
-        reciprocal_tokens = dict()
-        for x in chain(range(-freegroup_dimension, 0), range(1, freegroup_dimension + 1)):
-            idx, _idx = tokenizer.convert_tokens_to_ids([str(x), str(-x)])
-            reciprocal_tokens[idx] = _idx
-
-        return NoLastTokenReductionProcessor(reciprocal_tokens)
-
-    def __call__(self, input_ids, scores):
-        
-        id_with_reciprocals = [
-            (i, self.reciprocal_tokens[token_idx.item()]) if token_idx.item() in self.reciprocal_tokens else None
-            for i, token_idx in enumerate(input_ids[:, -1])
-        ]
-        id_with_reciprocals = filter(lambda x: not x is None, id_with_reciprocals)
-
-
-        try:    
-            batch_ids, last_reciprocal_ids = map(
-                lambda x: tensor(list(x), dtype = int, device = scores.device),
-                zip(*id_with_reciprocals)
-            )
-            scores[batch_ids, last_reciprocal_ids] = -inf
-        except ValueError:
-            pass
-        
-        return scores    
-    
-# https://github.com/huggingface/transformers/blob/v4.28.1/src/transformers/generation/logits_process.py#L892
-class SuppressTokensLogitsProcessor(LogitsProcessor):
-    def __init__(self, tokens):
-        self.tokens = list(tokens)
-        
-    def __call__(self, input_ids, scores):
-        scores[:, self.tokens] = -float('inf')
-        return scores
-
 # Parameters of inference    
     
 fdim = 5                    # Dimension of free group
@@ -106,11 +58,7 @@ generate_config = {
     'max_length': max_length,
     'do_sample': True,
     'num_return_sequences': num_return_sequences,
-    'logits_processor': LogitsProcessorList([
-        TopPLogitsWarper(top_p),
-        SuppressTokensLogitsProcessor(tokenizer.convert_tokens_to_ids(['[', ']', ','])), # To enforce model not to sample 'redundant' tokens
-        NoLastTokenReductionProcessor.from_tokenizer(fdim, tokenizer),                   # To enforce model not to sample reducing tokens, i.e. model wouldn't generate xX
-    ]),
+    'top_p': top_p,
 }
 
 outputs = model.generate(inputs = inputs.to(model.device), **generate_config)
