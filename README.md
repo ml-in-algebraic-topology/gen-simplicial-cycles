@@ -19,49 +19,58 @@ where $R_i = \langle x_i \rangle \subset F$ is a subgroup of free group $F$ gene
 ```py
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
-tokenizer = AutoTokenizer.from_pretrained('kibrq/prompt-simplical-cycles')
-model = AutoModelForCausalLM.from_pretrained('kibrq/prompt-simplical-cycles').to('cuda')
-
 from freegroup.tools import (
     batch_to_string, batch_from_string,
     is_from_singleton_normal_closure
 )
+from typing import Dict
 from freegroup.sampling import freegroup_generator
 from itertools import islice
+from dataclasses import dataclass
 
-# Parameters of inference    
-    
-fdim = 5                    # Dimension of free group
-batch_size = 10             # Number of prefixes to generate from
-prefix_length = 5           # Length of prefixes to generate from
-max_length = 200            # Maximum length of generated words
-top_p = 0.9                 # Parameter for Top-p Sampling
-num_return_sequences = 5    # Number of generated words per one prefix
+@dataclass
+class InferenceConfig:
+    checkpoint: str
+    fdim: int
+    batch_size: int
+    prefix_length: int
+    gen: Dict
+        
+config = InferenceConfig(
+    checkpoint    = 'kibrq/prompt-simplical-cycles', # Load model from this checkpoint 
+    fdim          = 5,  # Dimension of the Free Group
+    batch_size    = 10, # Number of prefixes to generate from
+    prefix_length = 5,  # Length of prefixes to generate from
+    gen = {
+        'max_length'          : 200,   # Maximum length of generated words
+        'do_sample'           : True,  # We use sampling method to generate words
+        'num_return_sequences': 5,     # Number of words per each prefix
+        'top_p'               : 0.9,   # Parameter of TOP-P sampling
+    }
+)
+
+
+tokenizer = AutoTokenizer.from_pretrained(config.checkpoint)
+model = AutoModelForCausalLM.from_pretrained(config.checkpoint)
 
 # Sample `batch_size` prefixes of length `prefix_length`
 inputs = freegroup_generator(
-    freegroup_dimension = fdim,
+    freegroup_dimension = config.fdim,
     length_method = 'constant',
-    length_parameters = {'radius': prefix_length},
+    length_parameters = {'radius': config.prefix_length},
 )
 
 # Represent them as strings
-inputs = batch_to_string(islice(inputs, batch_size), method = 'integer')
+inputs = batch_to_string(islice(inputs, config.batch_size), method = 'integer')
 
 # Prepend them with prompt to enforce model generate from the complete intersection
-inputs = map(lambda x: 'y'*(fdim + 1) + ':' + x, inputs)
+prompt = 'y' * (config.fdim + 1) + ' : '
+inputs = map(lambda x: prompt + x, inputs)
 
 # Tokenize resulted strings
 inputs = tokenizer(list(inputs), return_tensors = 'pt').input_ids[:, :-1]
 
-generate_config = {
-    'max_length': max_length,
-    'do_sample': True,
-    'num_return_sequences': num_return_sequences,
-    'top_p': top_p,
-}
-
-outputs = model.generate(inputs = inputs.to(model.device), **generate_config)
+outputs = model.generate(inputs = inputs.to(model.device), **config.gen)
 
 # Decode outputs of the model
 outputs = tokenizer.batch_decode(outputs, skip_special_tokens = True)
