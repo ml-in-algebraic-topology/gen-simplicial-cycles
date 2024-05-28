@@ -1,5 +1,5 @@
 # Generating simplicial cycles
-This repository provides an implementation for methods described in [`Applying language models to algebraic topology: generating simplicial cycles using multi-labeling in Wu's formula`]() by K. Brilliantov, F. Pavutnitskiy, D. Pasechnyuk, and G. Magai.
+This repository provides an implementation for methods described in [`Applying language models to algebraic topology: generating simplicial cycles using multi-labeling in Wu's formula`](https://arxiv.org/abs/2306.16951) by K. Brilliantov, F. Pavutnitskiy, D. Pasechnyuk, and G. Magai.
 
 ## Problem description
 There is a Wu formula for the homotopy groups of the two-dimensional sphere:
